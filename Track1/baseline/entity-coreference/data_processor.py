@@ -34,7 +34,14 @@ def split_spans(point, spans):
 
 
 class Document:
+    '''
+    一段对话
+    '''
+
     def __init__(self, item, data_args, is_testing):
+        '''
+        item: 一段对话
+        '''
         self.id = item["id"]
         self.text, self.entities = self.get_text_and_entities(item)
         self.data_args = data_args 
@@ -46,6 +53,13 @@ class Document:
             assert text[ent["position"][0]:ent["position"][1]] == ent["name"]
     
     def get_text_and_entities(self, item):
+        '''
+        item: 一段对话
+        id: 实体id
+        position: 列表,span
+        utterance_id: 对应的utterances列表的下标
+        '''
+
         utterances = []
         entities = []
         for turn in item["content"]:
@@ -67,16 +81,19 @@ class Document:
     
 
     def entity_id(self, entity):
+        # 类似一种哈希
         return entity["name"] + "_" + str(entity["position"][0])
 
 
     def populate_entity_spans(self):
         entities = sorted(self.entities, key=lambda x: (x["utterance_id"], x["position"][0]))
+        # 实体哈希：实体在entities中的下标
         entity2id = {self.entity_id(e):idx for idx, e in enumerate(entities)} 
         self.sorted_entity_spans = [(entity["utterance_id"], entity["position"], entity["type"]) for entity in entities]
         if not (self.is_testing and self.data_args.test_exists_labels):
             merged_entities = defaultdict(list)
             for entity in self.entities:
+                # 一段对话中实体的id是统一的，merged_entities为id相同的实体
                 merged_entities[entity["id"]].append(entity)
             merged_entities = list(merged_entities.values())
             self.label_groups = [[entity2id[self.entity_id(e)] for e in entities] for entities in merged_entities] # List[List[int]] each sublist is a group of entity index that co-references each other
@@ -90,8 +107,8 @@ class ECProcessor(Dataset):
         self.tokenizer = tokenizer
         self.is_testing = is_testing
         self.max_length = data_args.max_seq_length
+        # self.examples: List[Document]
         self.load_examples(input_path)
-        self.examples = self.examples
         self.tokenize()
         self.to_tensor()
     
@@ -115,13 +132,18 @@ class ECProcessor(Dataset):
             spans = example.sorted_entity_spans
             text = example.text
             entity_id = 0
+            # 一段对话的token id
             sub_input_ids = [self.tokenizer.cls_token_id]
+            # 一段对话的实体span
             sub_entity_spans = []
             for sent_id, word in enumerate(text):
+                # 这句话当前位置的指针，记录tokenizer末尾的位置
                 i = 0
+                # 这句话出现的实体的span
                 tmp_entity_spans = []
+                # 这句话的token id
                 tmp_input_ids = []
-                # add special tokens for entity
+                # 将一句话中的实体和上下文分别过tokenizer，并将输出的token id拼接成tmp_input_ids，并记录实体span
                 while entity_id < len(spans) and spans[entity_id][0] == sent_id:
                     sp = spans[entity_id]
                     if i < sp[1][0]:
@@ -141,7 +163,6 @@ class ECProcessor(Dataset):
                 if word[i:]:
                     tmp_input_ids += self.tokenizer(word[i:],add_special_tokens=False)["input_ids"]
 
-                # TODO add sep token
                 tmp_input_ids += [self.tokenizer.sep_token_id]
                 
                 if len(sub_input_ids) + len(tmp_input_ids) <= self.max_length:
@@ -179,6 +200,7 @@ class ECProcessor(Dataset):
             self.tokenized_samples.append(tokenized)
     
     def to_tensor(self):
+        # 把每一段对话padding到最大长度，同时维护attention mask
         for item in self.tokenized_samples:
             # print(item)
             attention_mask = []
@@ -199,10 +221,13 @@ class ECProcessor(Dataset):
 
 
 def collator(data):
+    # 维护splits，表明每段对话之间的间隔
     collate_data = {"input_ids": [], "attention_mask": [], "entity_spans": [], "label_groups": [], "splits": [0], "doc_id": []}
+    # data: 一个batch
     for d in data:
         for k in d:
             collate_data[k].append(d[k])
+    # 每段对话有几轮对话
     lengths = [ids.size(0) for ids in collate_data["input_ids"]]
     for l in lengths:
         collate_data["splits"].append(collate_data["splits"][-1]+l)   

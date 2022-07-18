@@ -47,7 +47,9 @@ class EntityEncoder(nn.Module):
 
 
 class Score(nn.Module):
-    """ Generic scoring module
+    """ 
+    一个MLP
+    Generic scoring module
     """
     def __init__(self, embeds_dim, hidden_dim=150):
         super(Score, self).__init__()

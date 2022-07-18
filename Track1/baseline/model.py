@@ -86,13 +86,14 @@ class ModelForTokenClassification(nn.Module):
 
 
 class ModelForSequenceLabeling(nn.Module):
-    """Bert model for token classification."""
+    """Bert model for sequence labeling."""
 
     def __init__(self, config, backbone):
         super(ModelForSequenceLabeling, self).__init__()
         self.backbone = backbone 
         self.crf = CRF(config.num_labels, batch_first=True)
         self.cls_head = ClassificationHead(config)
+        self.loss_fn = nn.CrossEntropyLoss()
 
     def forward(
         self,
@@ -112,8 +113,7 @@ class ModelForSequenceLabeling(nn.Module):
         # compute loss 
         loss = None 
         if labels is not None:
-            loss_fn = nn.CrossEntropyLoss()
-            loss = loss_fn(logits.reshape(-1, logits.shape[-1]), labels.reshape(-1))
+            loss = self.loss_fn(logits.reshape(-1, logits.shape[-1]), labels.reshape(-1))
             # CRF
             # mask = labels != -100
             # mask[:, 0] = 1

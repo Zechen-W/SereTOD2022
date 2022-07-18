@@ -51,6 +51,10 @@ class DataProcessor(Dataset):
         raise NotImplementedError
 
     def _truncate(self, outputs, max_seq_length):
+        '''
+        输入：outputs: 文本过tokenizer后的tokens
+            max_seq_length: 最大长度
+        '''
         is_truncation = False
         if len(outputs["input_ids"]) > max_seq_length:
             print("An instance exceeds the maximum length.")
@@ -98,7 +102,9 @@ class DataProcessor(Dataset):
 
 
 class SLProcessor(DataProcessor):
-    """Data processor for sequence labeling."""
+    """
+    Data processor for sequence labeling.
+    """
 
     def __init__(self, config, tokenizer, input_file, is_testing):
         super().__init__(config, tokenizer, is_testing)
@@ -119,6 +125,10 @@ class SLProcessor(DataProcessor):
         return [start, end]
     
     def read_examples_turn(self, input_file):
+        '''
+        将每段对话中的每轮对话中的两句话拼接起来作为一个样本，并对实体的name打上BIO标签
+        若一轮对话中没有标注实体，跳过
+        '''
         self.examples = []
         data = json.load(open(input_file))
         for item in tqdm(data, desc="Reading from %s" % input_file):
