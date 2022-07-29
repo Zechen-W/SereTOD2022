@@ -17,6 +17,9 @@ def get_model(model_args, backbone):
 
 
 class EntityEncoder(nn.Module):
+    '''
+    把每个实体的平均embedding作为实体embedding
+    '''
     def __init__(self, config, backbone):
         super(EntityEncoder, self).__init__()
         self.aggr = "mean"
@@ -34,6 +37,7 @@ class EntityEncoder(nn.Module):
             embed = []
             doc_embed = output[doc_splits[i]:doc_splits[i+1]]
             doc_spans = event_spans[i]
+            # j:当前对话段中的第几轮对话
             for j, spans in enumerate(doc_spans):
                 for span in spans:
                     if self.aggr == "max":
@@ -48,7 +52,7 @@ class EntityEncoder(nn.Module):
 
 class Score(nn.Module):
     """ 
-    一个MLP
+    一个MLP，维度embeds_dim -> 1
     Generic scoring module
     """
     def __init__(self, embeds_dim, hidden_dim=150):
@@ -76,6 +80,9 @@ class PairScorer(nn.Module):
         self.score = Score(embed_dim * 3)
     
     def forward(self, event_embed):
+        '''
+        event_embed: 每段对话中每个实体的平均embedding
+        '''
         # dummy = torch.zeros(self.embed_dim)
         all_probs = []
         for i in range(len(event_embed)):
@@ -120,9 +127,9 @@ class ModelForEntityCoreference(nn.Module):
             filled_labels = to_cuda(filled_labels)
             # print(filled_labels.size())
             # print(prob.size())
-            weight = torch.eye(prob.size(0))
-            weight[weight==0.0] = 0.1
-            weight = weight.to(prob.device)
+            # weight = torch.eye(prob.size(0))
+            # weight[weight==0.0] = 0.1
+            # weight = weight.to(prob.device)
             prob_sum = torch.sum(torch.clamp(torch.mul(prob, filled_labels), eps, 1-eps), dim=1)
             # print(prob_sum)
             loss = loss + torch.sum(torch.log(prob_sum)) * -1

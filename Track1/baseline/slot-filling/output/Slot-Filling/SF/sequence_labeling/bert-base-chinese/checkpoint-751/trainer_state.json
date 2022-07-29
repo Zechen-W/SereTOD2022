@@ -1,0 +1,67 @@
+{
+  "best_metric": 57.87211648101044,
+  "best_model_checkpoint": "output/Slot-Filling/SF/sequence_labeling/bert-base-chinese/checkpoint-751",
+  "epoch": 0.9995009149891865,
+  "global_step": 751,
+  "is_hyper_param_search": false,
+  "is_local_process_zero": true,
+  "is_world_process_zero": true,
+  "log_history": [
+    {
+      "epoch": 0.13,
+      "learning_rate": 1.3297872340425532e-05,
+      "loss": 1.636,
+      "step": 100
+    },
+    {
+      "epoch": 0.27,
+      "learning_rate": 2.6595744680851064e-05,
+      "loss": 0.6287,
+      "step": 200
+    },
+    {
+      "epoch": 0.4,
+      "learning_rate": 3.9893617021276594e-05,
+      "loss": 0.534,
+      "step": 300
+    },
+    {
+      "epoch": 0.53,
+      "learning_rate": 4.964486534477656e-05,
+      "loss": 0.4735,
+      "step": 400
+    },
+    {
+      "epoch": 0.67,
+      "learning_rate": 4.81651376146789e-05,
+      "loss": 0.4573,
+      "step": 500
+    },
+    {
+      "epoch": 0.8,
+      "learning_rate": 4.668540988458124e-05,
+      "loss": 0.4218,
+      "step": 600
+    },
+    {
+      "epoch": 0.93,
+      "learning_rate": 4.5205682154483574e-05,
+      "loss": 0.4161,
+      "step": 700
+    },
+    {
+      "epoch": 1.0,
+      "eval_loss": 0.37842920422554016,
+      "eval_micro_f1": 57.87211648101044,
+      "eval_runtime": 9.1096,
+      "eval_samples_per_second": 320.652,
+      "eval_steps_per_second": 10.099,
+      "step": 751
+    }
+  ],
+  "max_steps": 3755,
+  "num_train_epochs": 5,
+  "total_flos": 0.0,
+  "trial_name": null,
+  "trial_params": null
+}

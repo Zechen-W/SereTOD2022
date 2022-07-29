@@ -38,12 +38,19 @@ def set_seed(args):
 
 # argument parser
 parser = ArgumentParser((ModelArguments, DataArguments, TrainingArguments))
-if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+if len(sys.argv) >= 2 and sys.argv[1].endswith(".json"):
     # If we pass only one argument to the script and it's the path to a json file,
     # let's parse it to get our arguments.
     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-elif len(sys.argv) == 2 and sys.argv[1].endswith(".yaml"):
+elif len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
     model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[1]))
+    if sys.argv[2] in ['train', 'test']:
+        if sys.argv[2] == 'train':
+            training_args.do_train = True
+            training_args.do_predict = False
+        else:
+            training_args.do_train = False
+            training_args.do_predict = True
 else:
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
@@ -108,13 +115,14 @@ trainer = Trainer(
     tokenizer=tokenizer,
     callbacks=[earlystoppingCallBack]
 )
-trainer.train()
+
+if training_args.do_train:
+    trainer.train()
 
 if training_args.do_predict:
     test_dataset = data_class(data_args, tokenizer, data_args.test_file, True)
     logits, labels, metrics = trainer.predict(
-        test_dataset=test_dataset,
-        ignore_keys=["loss"]
+        test_dataset=test_dataset
     )   
     if data_args.test_exists_labels:
         print(metrics)

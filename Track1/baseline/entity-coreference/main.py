@@ -43,12 +43,19 @@ def set_seed(args):
 
 # argument parser
 parser = ArgumentParser((ModelArguments, DataArguments, TrainingArguments))
-if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+if len(sys.argv) >= 2 and sys.argv[1].endswith(".json"):
     # If we pass only one argument to the script and it's the path to a json file,
     # let's parse it to get our arguments.
     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-elif len(sys.argv) == 2 and sys.argv[1].endswith(".yaml"):
+elif len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
     model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[1]))
+    if sys.argv[2] in ['train', 'test']:
+        if sys.argv[2] == 'train':
+            training_args.do_train = True
+            training_args.do_predict = False
+        else:
+            training_args.do_train = False
+            training_args.do_predict = True
 else:
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
@@ -124,39 +131,40 @@ def evaluate(model, dataloader, dump_preds=False):
         return result, dump_results
     return result
 
-# training loop 
-global_step = 0
-best_f1 = 0
-train_losses = []
-print("We will train in %d steps" % num_training_steps)
-for epoch in range(training_args.num_train_epochs):
-    for data in tqdm(train_dataloader, desc=f"Training epoch {epoch}"):
-        model.train()
-        for k in data:
-            if isinstance(data[k], torch.Tensor):
-                data[k] = to_cuda(data[k])
-        outputs = model(**data)
-        loss = outputs["loss"]
-        train_losses.append(loss.item())
-        loss.backward()
-        optimizer.step()
-        bert_optimizer.step()
-        scheduler.step()
-        optimizer.zero_grad()
-        bert_optimizer.zero_grad()
+if training_args.do_train:
+    # training loop 
+    global_step = 0
+    best_f1 = 0
+    train_losses = []
+    print("We will train in %d steps" % num_training_steps)
+    for epoch in range(training_args.num_train_epochs):
+        for data in tqdm(train_dataloader, desc=f"Training epoch {epoch}"):
+            model.train()
+            for k in data:
+                if isinstance(data[k], torch.Tensor):
+                    data[k] = to_cuda(data[k])
+            outputs = model(**data)
+            loss = outputs["loss"]
+            train_losses.append(loss.item())
+            loss.backward()
+            optimizer.step()
+            bert_optimizer.step()
+            scheduler.step()
+            optimizer.zero_grad()
+            bert_optimizer.zero_grad()
 
-        global_step += 1
-        if global_step % training_args.logging_steps == 0:
-            print("Train %d steps: loss=%f" % (global_step, np.mean(train_losses)))
-            train_losses = []
-    # development
-    result = evaluate(model, eval_dataloader)
-    print(result)
-    if result["micro_f1"] > best_f1:
-        print("better result!")
-        best_f1 = result["micro_f1"]
-        state = {"model":model.state_dict(), "optimizer":optimizer.state_dict(), "scheduler": scheduler.state_dict()}
-        torch.save(state, os.path.join(output_dir, "best"))
+            global_step += 1
+            if global_step % training_args.logging_steps == 0:
+                print("Train %d steps: loss=%f" % (global_step, np.mean(train_losses)))
+                train_losses = []
+        # development
+        result = evaluate(model, eval_dataloader)
+        print(result)
+        if result["micro_f1"] > best_f1:
+            print("better result!")
+            best_f1 = result["micro_f1"]
+            state = {"model":model.state_dict(), "optimizer":optimizer.state_dict(), "scheduler": scheduler.state_dict()}
+            torch.save(state, os.path.join(output_dir, "best"))
 
 
 if training_args.do_predict:

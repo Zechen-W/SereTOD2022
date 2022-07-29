@@ -82,7 +82,8 @@ class Document:
 
     def entity_id(self, entity):
         # 类似一种哈希
-        return entity["name"] + "_" + str(entity["position"][0])
+        # return entity["name"] + "_" + str(entity["position"][0])
+        return f'{entity["name"]}_{entity["id"]}_{entity["utterance_id"]}_{entity["position"][0]}'
 
 
     def populate_entity_spans(self):
