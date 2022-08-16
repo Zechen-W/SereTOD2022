@@ -46,7 +46,7 @@ if len(sys.argv) >= 2 and sys.argv[1].endswith(".json"):
     # If we pass only one argument to the script and it's the path to a json file,
     # let's parse it to get our arguments.
     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-elif len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
+elif len(sys.argv)>2 and len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
     model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[1]))
     if sys.argv[2] in ['train', 'test']:
         if sys.argv[2] == 'train':
@@ -112,22 +112,24 @@ eval_dataset = data_class(data_args, tokenizer, data_args.validation_file, False
 # training_args.data_for_evaluation = eval_dataset.get_data_for_evaluation()
 
 
+
+# Trainer 
+trainer = Trainer(
+    args=training_args,
+    model=model,
+    train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
+    compute_metrics=metric_fn,
+    data_collator=train_dataset.collate_fn,
+    tokenizer=tokenizer,
+    callbacks=[earlystoppingCallBack]
+)
 if training_args.do_train:
-    # Trainer 
-    trainer = Trainer(
-        args=training_args,
-        model=model,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        compute_metrics=metric_fn,
-        data_collator=train_dataset.collate_fn,
-        tokenizer=tokenizer,
-        callbacks=[earlystoppingCallBack]
-    )
     trainer.train()
 
 
 if training_args.do_predict:
+    trainer.model.load_state_dict(torch.load('./output/Slot-Filling/ED/token_classification/bert-base-chinese/checkpoint-10626/pytorch_model.bin'))
     test_dataset = data_class(data_args, tokenizer, data_args.test_file, True)
     # training_args.data_for_evaluation = test_dataset.get_data_for_evaluation()
     logits, labels, metrics = trainer.predict(

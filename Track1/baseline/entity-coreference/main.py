@@ -49,7 +49,7 @@ if len(sys.argv) >= 2 and sys.argv[1].endswith(".json"):
     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
 elif len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
     model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[1]))
-    if sys.argv[2] in ['train', 'test']:
+    if len(sys.argv)>2 and sys.argv[2] in ['train', 'test']:
         if sys.argv[2] == 'train':
             training_args.do_train = True
             training_args.do_predict = False
@@ -169,6 +169,8 @@ if training_args.do_train:
 
 if training_args.do_predict:
     print("Testing...")
+    state = torch.load(os.path.join(output_dir, "best"))
+    model.load_state_dict (state['model'])
     test_dataloader = get_dataloader(data_args, training_args, tokenizer, data_args.test_file, shuffle=False, is_testing=True)
     if data_args.test_exists_labels:
         result = evaluate(model, test_dataloader, False)

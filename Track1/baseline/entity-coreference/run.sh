@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=$1 python main.py config.yaml 
+CUDA_VISIBLE_DEVICES=$1 python main.py config.yaml test

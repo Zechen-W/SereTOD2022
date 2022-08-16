@@ -46,7 +46,7 @@ if len(sys.argv) >= 2 and sys.argv[1].endswith(".json"):
     # If we pass only one argument to the script and it's the path to a json file,
     # let's parse it to get our arguments.
     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-elif len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
+elif len(sys.argv)>2 and len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
     model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[1]))
     if sys.argv[2] in ['train', 'test']:
         if sys.argv[2] == 'train':

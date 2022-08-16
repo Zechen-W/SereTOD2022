@@ -44,7 +44,7 @@ if len(sys.argv) >= 2 and sys.argv[1].endswith(".json"):
     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
 elif len(sys.argv) >= 2 and sys.argv[1].endswith(".yaml"):
     model_args, data_args, training_args = parser.parse_yaml_file(yaml_file=os.path.abspath(sys.argv[1]))
-    if sys.argv[2] in ['train', 'test']:
+    if len(sys.argv)>2 and sys.argv[2] in ['train', 'test']:
         if sys.argv[2] == 'train':
             training_args.do_train = True
             training_args.do_predict = False
@@ -56,9 +56,10 @@ else:
 
 # output dir
 model_name_or_path = model_args.model_name_or_path.split("/")[-1]
-output_dir = Path(
-    os.path.join(os.path.join(os.path.join(training_args.output_dir, training_args.task_name), model_args.paradigm),
-                 model_name_or_path))
+# output_dir = Path(
+#     os.path.join(os.path.join(os.path.join(training_args.output_dir, training_args.task_name), model_args.paradigm),
+#                  model_name_or_path))
+output_dir = Path(training_args.output_dir)
 output_dir.mkdir(exist_ok=True, parents=True)
 training_args.output_dir = output_dir
 
@@ -117,6 +118,7 @@ trainer = Trainer(
 )
 
 if training_args.do_train:
+    # trainer.train(resume_from_checkpoint=True)
     trainer.train()
 
 if training_args.do_predict:

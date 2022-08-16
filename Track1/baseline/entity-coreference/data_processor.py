@@ -42,7 +42,7 @@ class Document:
         '''
         item: 一段对话
         '''
-        self.id = item["id"]
+        self.id = item.get('id', 'testsetHasNoId')
         self.text, self.entities = self.get_text_and_entities(item)
         self.data_args = data_args 
         self.is_testing = is_testing
@@ -76,7 +76,10 @@ class Document:
                         "position": offset,
                         "utterance_id": utterance_id
                     })
-                    assert utterances[utterance_id][offset[0]:offset[1]] == ent["name"]
+                    try:
+                        assert utterances[utterance_id][offset[0]:offset[1]] == ent["name"], utterances[utterance_id]
+                    except:
+                        pdb.set_trace()
         return utterances, entities
     
 
@@ -154,7 +157,10 @@ class ECProcessor(Dataset):
                     start = len(tmp_input_ids)
                     end = len(tmp_input_ids) + len(entity_ids)
                     tmp_entity_spans.append((start, end))
-                    assert end != start
+                    try:
+                        assert end != start
+                    except:
+                        pdb.set_trace()
                     # special_ids = self.tokenizer(type_tokens(sp[2]), is_split_into_words=True, add_special_tokens=False)["input_ids"]
                     # assert len(special_ids) == 2, print(f"special tokens <{sp[2]}> and <{sp[2]}/> may not be added to tokenizer.")
                     tmp_input_ids += entity_ids
