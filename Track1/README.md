@@ -1,5 +1,11 @@
 # SereTOD Track1: Information Extraction from dialog transcripts
-This directory contains the task definition, evaluation, and baseline code for SereTOD Track1. 
+This repository contains the task, evaluation, data and baseline codes for SereTOD Track1. 
+# Update 
+**2022.08.24** Update `post_process.py`: fix offset computation bugs for labels. The lastest baseline results are: **F1 (entity) 33.45, F1 (Triple) 34.94**. \  
+**2022.08.24** Update `post_process.py`: fix `数据业务` replace bugs. The lastest baseline results are: **F1 (entity) 32.85, F1 (Triple) 34.94**. \   
+**2022.08.22** Update evaluation script: 1. Use `offset` for evaluation of entities. 2. Use `mention` for evaluation of triples. 3. Add `turn_id` for more precise evaluation. 4. Delete golden labels per step to avoid influence of duplicate predictions. The lastest baseline results are: **F1 (entity) 32.86, F1 (Triple) 34.75**. \
+**2022.08.19** Update evaluation script: 1. Use `mention` instead of `offset` for evaluation 2. Add `post_process.py` to filter whitespace and `_` before evaluation. The lastest baseline results are: **F1 (entity) 38.16, F1 (Triple) 38.40**. 
+
 # Task    
 In a task-oriented dialog system, after dialog state tracking, the system needs to query a task-related knowledge base. Given a mix of labeled and unlabeled dialog transcripts, Track 1 examines the task of training information extraction models to construct the “local” knowledge base for each dialog, which will be needed in training TOD systems in Track 2. Therefore, we define two sub-tasks:  
 1) Entity extraction. This sub-task is to extract entities with their corresponding concepts. In real-life dialogs, an entity
@@ -87,8 +93,7 @@ The submission file should be a json formatted file, and the format is as follow
 ```
 
 ### Evaluation and Results
-We use micro-F1 as the basic metric. 
-For evaluation, we run the [Hungarian Algorithm](https://en.wikipedia.org/wiki/Hungarian_algorithm) on the submissions to 
-get the best assignments between predicted entities and golden entities. The evaluation script `eval_script.py` is also provided in the repo.  
-We random sample 1,000 instances as the test set and evaluate the baseline on the test set. The results are:
-**F1 (entity) 35.73, F1 (Triple) 27.23**. The results are relatively low, which indicates that the task is challenging and needs more powerful models. 
+We use micro-F1 as the basic metric. Before evaluation, we run Hungarian Algorithm on the submissions to 
+get best assignments between predicted entities and golden entities. The evaluation script `eval_script.py` is also provided in the repo.  
+We random sample 1,000 instances as the test set and evaluate our baseline on the test set. The results are:
+**F1 (entity) 38.16, F1 (Triple) 38.40**. The results are relatively low, which indicates the task is challenging and needs more powerful models. 
